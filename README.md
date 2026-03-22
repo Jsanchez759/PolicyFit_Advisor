@@ -491,36 +491,6 @@ VITE_API_URL=https://api.yourdomain.com/api/v1
 - ✅ Loading states and user feedback
 - ✅ Form validation with custom hooks
 
-## 🗺️ Roadmap
-
-### Phase 1: MVP (Current)
-- ✅ Policy upload and processing
-- ✅ Business profile collection
-- ✅ Analysis dashboard
-- ✅ Recommendations generation
-- ✅ Report export
-
-### Phase 2: Enhancement
-- 📋 Multi-policy comparison
-- 📊 Industry benchmarking
-- 💬 Chat interface for questions
-- 🔄 Batch processing
-- 📧 Email notifications
-
-### Phase 3: Advanced Features
-- 🤖 Fine-tuned LLM models
-- 📱 Mobile application
-- 🌍 Multi-language support
-- 🔗 Insurance provider integrations
-- 📈 Analytics dashboard
-
-## 🤝 Contributing
-
-1. Create a feature branch: `git checkout -b feature/my-feature`
-2. Commit changes: `git commit -am 'Add feature'`
-3. Push to branch: `git push origin feature/my-feature`
-4. Submit a pull request with description
-
 ## 📄 License
 
 This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.

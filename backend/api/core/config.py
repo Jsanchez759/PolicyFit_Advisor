@@ -23,9 +23,12 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
     ]
-    ALLOWED_ORIGIN_REGEX: Optional[str] = None
+    ALLOWED_ORIGIN_REGEX: str = (
+        r"^https?://(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$"
+        r"|^https://([a-zA-Z0-9-]+\.)*vercel\.app$"
+    )
     
-    # Database Configuration (if needed in future)
+    # Database Configuration
     DATABASE_URL: str = "sqlite:///./policyfit.db"
     
     # File Upload Configuration
