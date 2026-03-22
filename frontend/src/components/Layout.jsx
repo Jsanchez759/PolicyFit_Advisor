@@ -14,6 +14,7 @@ function Layout({ children }) {
             <li><Link to="/upload">Upload</Link></li>
             <li><Link to="/intake-form">Form</Link></li>
             <li><Link to="/dashboard">Dashboard</Link></li>
+            <li><Link to="/workspace">Workspace</Link></li>
           </ul>
         </nav>
       </header>
@@ -21,7 +22,7 @@ function Layout({ children }) {
         {children}
       </main>
       <footer className="footer">
-        <p>&copy; 2024 PolicyFit Advisor. All rights reserved.</p>
+        <p></p>
       </footer>
     </>
   )

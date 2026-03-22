@@ -3,7 +3,13 @@ from pathlib import Path
 from uuid import uuid4
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request
+from api.core.storage import (
+    create_policy_record,
+    delete_policy_record,
+    get_policy_record,
+    list_policy_records,
+)
 from api.modules.ingestion.processor import DocumentProcessor
 from api.modules.extraction.extractor import PolicyExtractor
 from api.core.config import settings
@@ -11,11 +17,10 @@ from api.core.config import settings
 router = APIRouter()
 processor = DocumentProcessor(settings.UPLOAD_DIR)
 extractor = PolicyExtractor()
-POLICY_STORE: dict[str, dict] = {}
 
 
 @router.post("/upload")
-async def upload_policy(file: UploadFile = File(...)):
+async def upload_policy(request: Request, file: UploadFile = File(...)):
     """
     Upload a policy document (PDF)
     
@@ -49,7 +54,8 @@ async def upload_policy(file: UploadFile = File(...)):
 
     processed = await processor.process_pdf(file_path)
 
-    extracted_policy = await extractor.extract_policy_info(file_path)
+    request_api_key = request.headers.get("x-openrouter-api-key")
+    extracted_policy = await extractor.extract_policy_info(file_path, api_key=request_api_key)
     policy_id = str(uuid4())
     created_at = datetime.now(timezone.utc).isoformat()
 
@@ -66,7 +72,7 @@ async def upload_policy(file: UploadFile = File(...)):
         "created_at": created_at,
         "updated_at": created_at,
     }
-    POLICY_STORE[policy_id] = payload
+    create_policy_record(payload)
     
     return {
         **payload,
@@ -77,7 +83,7 @@ async def upload_policy(file: UploadFile = File(...)):
 @router.get("/")
 async def list_policies():
     """List stored policies."""
-    return list(POLICY_STORE.values())
+    return list_policy_records()
 
 
 @router.get("/{policy_id}")
@@ -91,7 +97,7 @@ async def get_policy(policy_id: str):
     Returns:
         Policy information
     """
-    policy = POLICY_STORE.get(policy_id)
+    policy = get_policy_record(policy_id)
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found")
     return policy
@@ -108,7 +114,7 @@ async def delete_policy(policy_id: str):
     Returns:
         Deletion confirmation
     """
-    policy = POLICY_STORE.get(policy_id)
+    policy = get_policy_record(policy_id)
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found")
 
@@ -120,7 +126,7 @@ async def delete_policy(policy_id: str):
         except Exception:
             pass
 
-    POLICY_STORE.pop(policy_id, None)
+    delete_policy_record(policy_id)
     return {
         "policy_id": policy_id,
         "status": "deleted"

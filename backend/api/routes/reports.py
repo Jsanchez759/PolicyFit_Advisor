@@ -2,8 +2,8 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 
+from api.core.storage import get_analysis_record
 from api.modules.report_generation.generator import ReportGenerator
-from api.routes.recommendations import ANALYSIS_STORE
 from api.schemas.recommendation import AnalysisResult
 
 router = APIRouter()
@@ -21,7 +21,7 @@ async def get_pdf_report(analysis_id: str):
     Returns:
         PDF file response
     """
-    analysis_data = ANALYSIS_STORE.get(analysis_id)
+    analysis_data = get_analysis_record(analysis_id)
     if not analysis_data:
         raise HTTPException(status_code=404, detail="Analysis not found")
 
@@ -45,7 +45,7 @@ async def get_html_report(analysis_id: str):
     Returns:
         HTML content
     """
-    analysis_data = ANALYSIS_STORE.get(analysis_id)
+    analysis_data = get_analysis_record(analysis_id)
     if not analysis_data:
         raise HTTPException(status_code=404, detail="Analysis not found")
 
@@ -65,7 +65,7 @@ async def get_json_report(analysis_id: str):
     Returns:
         JSON report
     """
-    analysis_data = ANALYSIS_STORE.get(analysis_id)
+    analysis_data = get_analysis_record(analysis_id)
     if not analysis_data:
         raise HTTPException(status_code=404, detail="Analysis not found")
 

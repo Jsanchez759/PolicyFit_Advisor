@@ -5,6 +5,7 @@ import IntakeForm from './pages/IntakeForm'
 import Dashboard from './pages/Dashboard'
 import Recommendations from './pages/Recommendations'
 import Export from './pages/Export'
+import Workspace from './pages/Workspace'
 import Layout from './components/Layout'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/recommendations" element={<Recommendations />} />
           <Route path="/export" element={<Export />} />
+          <Route path="/workspace" element={<Workspace />} />
         </Routes>
       </Layout>
     </Router>

@@ -2,6 +2,98 @@
   color: #333;
 }
 
+.api-key-panel {
+  background: #fff;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.api-key-panel h3 {
+  color: #0f4c81;
+  margin-bottom: 0.25rem;
+}
+
+.api-key-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.api-key-help {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid #b7c8df;
+  background: #f3f8ff;
+  color: #1b4ea1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: help;
+  position: relative;
+}
+
+.api-key-popover {
+  display: none;
+  position: absolute;
+  top: 28px;
+  left: -8px;
+  width: 340px;
+  background: #ffffff;
+  border: 1px solid #d8e2f0;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.14);
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+  z-index: 30;
+}
+
+.api-key-popover p {
+  margin: 0 0 0.4rem;
+  color: #334155;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.api-key-popover p:last-child {
+  margin-bottom: 0;
+}
+
+.api-key-help:hover .api-key-popover,
+.api-key-help:focus .api-key-popover,
+.api-key-help:focus-within .api-key-popover {
+  display: block;
+}
+
+.api-key-panel p {
+  color: #5f6b7a;
+  margin-bottom: 0.7rem;
+}
+
+.api-key-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.api-key-row input {
+  flex: 1;
+  border: 1px solid #cfd8e3;
+  border-radius: 6px;
+  padding: 0.55rem 0.7rem;
+}
+
+.api-key-row button {
+  border: 1px solid #b7d0ff;
+  background: #e9f1ff;
+  color: #1b4ea1;
+  border-radius: 6px;
+  padding: 0.55rem 0.8rem;
+  font-weight: 600;
+}
+
 .hero {
   background: linear-gradient(135deg, #0066cc 0%, #00ccff 100%);
   color: white;
@@ -42,6 +134,17 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     text-decoration: none;
   }
+}
+
+.cta-button.ghost {
+  margin-left: 0.8rem;
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.cta-button.ghost:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .features {

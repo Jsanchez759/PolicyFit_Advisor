@@ -1,6 +1,13 @@
 import { create } from 'zustand'
 
 export const useStore = create((set) => ({
+  // Runtime API key (client-provided)
+  openRouterApiKey: localStorage.getItem('openrouter_api_key') || '',
+  setOpenRouterApiKey: (key) => {
+    localStorage.setItem('openrouter_api_key', key)
+    set({ openRouterApiKey: key })
+  },
+
   // Business Data
   businessData: null,
   businessId: null,

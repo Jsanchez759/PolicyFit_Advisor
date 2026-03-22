@@ -1,16 +1,37 @@
 """Recommendation endpoints"""
 from uuid import uuid4
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel, Field
 
-from api.core.llm_client import chat_json
+from api.core.llm_client import chat_json, chat_text
 from api.core.config import settings
-from api.routes.business import BUSINESS_STORE
-from api.routes.policies import POLICY_STORE
+from api.core.storage import (
+    create_analysis_record,
+    delete_analysis_record,
+    get_analysis_record,
+    get_analysis_chat_messages,
+    get_business_record,
+    get_policy_record,
+    list_analysis_records,
+    save_analysis_chat_messages,
+)
 from api.schemas.recommendation import AnalysisRequest, AnalysisResult
 
 router = APIRouter()
-ANALYSIS_STORE: dict[str, dict] = {}
+
+
+class AnalysisChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=4000)
+
+
+@router.get("/")
+async def list_analyses():
+    """List all generated analyses."""
+    analyses = list_analysis_records()
+    analyses.sort(key=lambda item: item.get("created_at", ""), reverse=True)
+    return analyses
 
 
 def _fallback_analysis(request: AnalysisRequest) -> dict:
@@ -42,7 +63,7 @@ def _fallback_analysis(request: AnalysisRequest) -> dict:
 
 
 @router.post("/analyze", response_model=AnalysisResult)
-async def analyze_coverage(request: AnalysisRequest):
+async def analyze_coverage(request: AnalysisRequest, http_request: Request):
     """
     Analyze coverage gaps and generate recommendations
     
@@ -52,17 +73,23 @@ async def analyze_coverage(request: AnalysisRequest):
     Returns:
         Analysis result with gaps and recommendations
     """
-    business = BUSINESS_STORE.get(request.business_id)
+    business = get_business_record(request.business_id)
     if not business:
         raise HTTPException(status_code=404, detail="Business not found")
 
-    policy = POLICY_STORE.get(request.policy_id)
+    policy = get_policy_record(request.policy_id)
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found")
 
-    if not settings.OPENROUTER_API_KEY:
+    created_at = datetime.now(timezone.utc).isoformat()
+
+    request_api_key = http_request.headers.get("x-openrouter-api-key")
+
+    if not (request_api_key or settings.OPENROUTER_API_KEY):
         result = _fallback_analysis(request)
-        ANALYSIS_STORE[result["analysis_id"]] = result
+        result["created_at"] = created_at
+        result["updated_at"] = created_at
+        create_analysis_record(result)
         return result
 
     system_prompt = (
@@ -83,7 +110,11 @@ async def analyze_coverage(request: AnalysisRequest):
     )
 
     try:
-        parsed = await chat_json(system_prompt=system_prompt, user_prompt=user_prompt)
+        parsed = await chat_json(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            api_key=request_api_key,
+        )
     except Exception:
         parsed = {}
 
@@ -96,6 +127,8 @@ async def analyze_coverage(request: AnalysisRequest):
         "recommendations": parsed.get("recommendations", []) or [],
         "overall_risk_score": float(parsed.get("overall_risk_score", 50.0)),
         "summary": str(parsed.get("summary", "Recommendation analysis completed.")),
+        "created_at": created_at,
+        "updated_at": created_at,
     }
 
     # Ensure response remains valid even when LLM returns incomplete payload.
@@ -105,7 +138,7 @@ async def analyze_coverage(request: AnalysisRequest):
         result["recommendations"] = fallback["recommendations"]
         result["summary"] = fallback["summary"]
 
-    ANALYSIS_STORE[analysis_id] = result
+    create_analysis_record(result)
     return result
 
 
@@ -120,7 +153,83 @@ async def get_analysis(analysis_id: str):
     Returns:
         Analysis result
     """
-    analysis = ANALYSIS_STORE.get(analysis_id)
+    analysis = get_analysis_record(analysis_id)
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found")
     return analysis
+
+
+@router.delete("/{analysis_id}")
+async def delete_analysis(analysis_id: str):
+    """Delete stored analysis by id."""
+    existing = get_analysis_record(analysis_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    delete_analysis_record(analysis_id)
+    return {"analysis_id": analysis_id, "status": "deleted"}
+
+
+@router.get("/{analysis_id}/chat")
+async def get_analysis_chat(analysis_id: str):
+    analysis = get_analysis_record(analysis_id)
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    return {"analysis_id": analysis_id, "messages": get_analysis_chat_messages(analysis_id)}
+
+
+@router.post("/{analysis_id}/chat")
+async def send_analysis_chat_message(
+    analysis_id: str,
+    payload: AnalysisChatRequest,
+    http_request: Request,
+):
+    analysis = get_analysis_record(analysis_id)
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    business = get_business_record(analysis["business_id"])
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+
+    request_api_key = http_request.headers.get("x-openrouter-api-key")
+    if not (request_api_key or settings.OPENROUTER_API_KEY):
+        raise HTTPException(status_code=400, detail="OpenRouter API key is required")
+
+    existing_messages = get_analysis_chat_messages(analysis_id)
+    now = datetime.now(timezone.utc).isoformat()
+    user_msg = {"role": "user", "content": payload.message, "timestamp": now}
+
+    llm_messages = [
+        {"role": m.get("role", "user"), "content": m.get("content", "")}
+        for m in existing_messages[-12:]
+    ]
+    llm_messages.append({"role": "user", "content": payload.message})
+
+    system_prompt = (
+        "You are a helpful insurance coverage assistant. "
+        "Answer user questions about this analysis and business context. "
+        "Be practical, concise, and clear when uncertain.\n\n"
+        f"ANALYSIS_CONTEXT: {analysis}\n\n"
+        f"BUSINESS_CONTEXT: {business}"
+    )
+
+    assistant_text = await chat_text(
+        system_prompt=system_prompt,
+        messages=llm_messages,
+        api_key=request_api_key,
+    )
+    assistant_msg = {
+        "role": "assistant",
+        "content": assistant_text or "I could not generate a response for that question.",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+    updated = [*existing_messages, user_msg, assistant_msg]
+    save_analysis_chat_messages(analysis_id, updated, updated_at=assistant_msg["timestamp"])
+
+    return {
+        "analysis_id": analysis_id,
+        "assistant_message": assistant_msg,
+        "messages": updated,
+    }

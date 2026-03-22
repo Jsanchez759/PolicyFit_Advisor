@@ -39,6 +39,9 @@ yarn-error.log*
 # Build
 dist/
 
+# Storage
+*.db
+
 # Env
 .env
 .env.local

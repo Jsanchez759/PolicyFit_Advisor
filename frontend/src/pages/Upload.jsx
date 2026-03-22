@@ -12,6 +12,9 @@ function Upload() {
 
   const [file, setFile] = useState(null)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [isUploading, setIsUploading] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('')
+  const [statusType, setStatusType] = useState('idle')
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0]
@@ -29,15 +32,29 @@ function Upload() {
     }
 
     try {
+      setIsUploading(true)
       setIsLoading(true)
+      setStatusType('loading')
+      setStatusMessage('Uploading policy document...')
+      setUploadProgress(20)
+
       const response = await policyService.upload(file)
+      setUploadProgress(75)
+      setStatusMessage('Extracting policy details and validating coverage...')
+
       setPolicyId(response.data.policy_id)
+      setUploadProgress(100)
+      setStatusType('success')
+      setStatusMessage('Policy processed successfully. Continuing to business form...')
       setError(null)
-      navigate('/intake-form')
+      setTimeout(() => navigate('/intake-form'), 800)
     } catch (err) {
+      setStatusType('error')
+      setStatusMessage('Upload failed. Please verify your PDF and try again.')
       setError('Failed to upload policy. Please try again.')
       console.error('Upload error:', err)
     } finally {
+      setIsUploading(false)
       setIsLoading(false)
     }
   }
@@ -58,6 +75,7 @@ function Upload() {
               onChange={handleFileChange}
               accept=".pdf"
               className="file-input"
+              disabled={isUploading}
             />
             <label htmlFor="file-input" className="file-label">
               <div className="upload-icon">📄</div>
@@ -85,12 +103,19 @@ function Upload() {
             </div>
           )}
 
+          {statusType !== 'idle' && (
+            <div className={`status-message status-${statusType}`}>
+              {statusType === 'loading' && <span className="status-spinner" aria-hidden="true" />}
+              <span>{statusMessage}</span>
+            </div>
+          )}
+
           <button
             type="submit"
             className="upload-button"
-            disabled={!file}
+            disabled={!file || isUploading}
           >
-            Upload Policy
+            {isUploading ? 'Processing Policy...' : 'Upload Policy'}
           </button>
         </form>
 

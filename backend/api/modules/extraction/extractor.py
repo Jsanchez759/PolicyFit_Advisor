@@ -15,7 +15,7 @@ class PolicyExtractor:
         self.model_name = settings.OPENROUTER_CHAT_MODEL
         self.embedding_model_name = settings.OPENROUTER_EMBEDDING_MODEL
         
-    async def extract_policy_info(self, pdf_path: str) -> Dict:
+    async def extract_policy_info(self, pdf_path: str, api_key: str | None = None) -> Dict:
         """
         Extract policy information from document text
         
@@ -25,11 +25,11 @@ class PolicyExtractor:
         Returns:
             Structured policy information
         """
-        policy_type = await self.extract_policy_type(pdf_path)
-        coverage_types = await self.extract_coverage_types(pdf_path)
-        limits, deductibles = await self.extract_limits_and_deductibles(pdf_path)
-        exclusions = await self.extract_exclusions(pdf_path)
-        dates = await self.extract_policy_dates(pdf_path)
+        policy_type = await self.extract_policy_type(pdf_path, api_key=api_key)
+        coverage_types = await self.extract_coverage_types(pdf_path, api_key=api_key)
+        limits, deductibles = await self.extract_limits_and_deductibles(pdf_path, api_key=api_key)
+        exclusions = await self.extract_exclusions(pdf_path, api_key=api_key)
+        dates = await self.extract_policy_dates(pdf_path, api_key=api_key)
 
         return {
             "policy_type": policy_type,
@@ -41,8 +41,8 @@ class PolicyExtractor:
             "expiration_date": dates.get("expiration_date"),
         }
 
-    async def _ask_pdf_json(self, pdf_path: str, prompt: str) -> Dict:
-        if not settings.OPENROUTER_API_KEY:
+    async def _ask_pdf_json(self, pdf_path: str, prompt: str, api_key: str | None = None) -> Dict:
+        if not (api_key or settings.OPENROUTER_API_KEY):
             logger.warning("OPENROUTER_API_KEY is not configured; returning fallback extraction")
             return {}
         try:
@@ -50,19 +50,21 @@ class PolicyExtractor:
                 file_path=pdf_path,
                 prompt=prompt,
                 system_prompt="Return strictly valid JSON. No markdown.",
+                api_key=api_key,
             )
         except Exception:
             logger.exception("PDF extraction call failed")
             return {}
 
-    async def extract_policy_type(self, pdf_path: str) -> str:
+    async def extract_policy_type(self, pdf_path: str, api_key: str | None = None) -> str:
         parsed = await self._ask_pdf_json(
             pdf_path,
             "Extract policy type. Return JSON: {\"policy_type\": \"...\"}. Use 'unknown' if missing.",
+            api_key=api_key,
         )
         return str(parsed.get("policy_type", "unknown"))
     
-    async def extract_coverage_types(self, pdf_path: str) -> List[str]:
+    async def extract_coverage_types(self, pdf_path: str, api_key: str | None = None) -> List[str]:
         """
         Extract covered insurance types from policy
         
@@ -75,10 +77,11 @@ class PolicyExtractor:
         parsed = await self._ask_pdf_json(
             pdf_path,
             "Extract all coverage types listed in the policy. Return JSON: {\"coverage_types\": [\"...\"]}.",
+            api_key=api_key,
         )
         return parsed.get("coverage_types", []) or []
     
-    async def extract_limits_and_deductibles(self, pdf_path: str) -> Tuple[Dict, Dict]:
+    async def extract_limits_and_deductibles(self, pdf_path: str, api_key: str | None = None) -> Tuple[Dict, Dict]:
         """
         Extract coverage limits and deductibles
         
@@ -93,10 +96,11 @@ class PolicyExtractor:
             "Extract coverage limits and deductibles. Return JSON: "
             "{\"coverage_limits\": {...}, \"deductibles\": {...}}."
             "If unknown, use empty objects.",
+            api_key=api_key,
         )
         return parsed.get("coverage_limits", {}) or {}, parsed.get("deductibles", {}) or {}
     
-    async def extract_exclusions(self, pdf_path: str) -> List[str]:
+    async def extract_exclusions(self, pdf_path: str, api_key: str | None = None) -> List[str]:
         """
         Extract policy exclusions
         
@@ -110,14 +114,16 @@ class PolicyExtractor:
             pdf_path,
             "Extract policy exclusions. Return JSON: {\"exclusions\": [\"...\"]}. "
             "If none are found, return an empty list.",
+            api_key=api_key,
         )
         return parsed.get("exclusions", []) or []
 
-    async def extract_policy_dates(self, pdf_path: str) -> Dict:
+    async def extract_policy_dates(self, pdf_path: str, api_key: str | None = None) -> Dict:
         parsed = await self._ask_pdf_json(
             pdf_path,
             "Extract effective and expiration dates. Return JSON: "
             "{\"effective_date\": \"YYYY-MM-DD or null\", \"expiration_date\": \"YYYY-MM-DD or null\"}.",
+            api_key=api_key,
         )
         return {
             "effective_date": parsed.get("effective_date"),

@@ -11,10 +11,10 @@ from openai import AsyncOpenAI
 from api.core.config import settings
 
 
-def get_openrouter_client() -> AsyncOpenAI:
+def get_openrouter_client(api_key: str | None = None) -> AsyncOpenAI:
     """Create an async OpenAI-compatible client for OpenRouter."""
     return AsyncOpenAI(
-        api_key=settings.OPENROUTER_API_KEY,
+        api_key=api_key or settings.OPENROUTER_API_KEY,
         base_url=settings.OPENROUTER_BASE_URL,
     )
 
@@ -63,9 +63,15 @@ def _safe_json_loads(raw: str) -> Dict[str, Any]:
     return {}
 
 
-async def chat_pdf_json(file_path: str, prompt: str, system_prompt: str = "") -> Dict[str, Any]:
+async def chat_pdf_json(
+    file_path: str,
+    prompt: str,
+    system_prompt: str = "",
+    api_key: str | None = None,
+) -> Dict[str, Any]:
     """Ask a question against a PDF using OpenRouter file-parser and return JSON."""
-    if not settings.OPENROUTER_API_KEY:
+    final_api_key = api_key or settings.OPENROUTER_API_KEY
+    if not final_api_key:
         raise ValueError("OPENROUTER_API_KEY is required for PDF parsing")
 
     pdf_bytes = Path(file_path).read_bytes()
@@ -102,7 +108,7 @@ async def chat_pdf_json(file_path: str, prompt: str, system_prompt: str = "") ->
     }
 
     headers = {
-        "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+        "Authorization": f"Bearer {final_api_key}",
         "Content-Type": "application/json",
     }
     async with httpx.AsyncClient(timeout=180.0) as client:
@@ -123,9 +129,9 @@ async def chat_pdf_json(file_path: str, prompt: str, system_prompt: str = "") ->
     return _safe_json_loads(content)
 
 
-async def chat_json(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+async def chat_json(system_prompt: str, user_prompt: str, api_key: str | None = None) -> Dict[str, Any]:
     """Call chat completions and force JSON object output."""
-    client = get_openrouter_client()
+    client = get_openrouter_client(api_key=api_key)
     response = await client.chat.completions.create(
         model=settings.OPENROUTER_CHAT_MODEL,
         messages=[
@@ -137,3 +143,18 @@ async def chat_json(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
     content = response.choices[0].message.content
     text = _extract_message_text(content)
     return _safe_json_loads(text)
+
+
+async def chat_text(
+    system_prompt: str,
+    messages: list[dict[str, str]],
+    api_key: str | None = None,
+) -> str:
+    """Call chat completions and return plain assistant text."""
+    client = get_openrouter_client(api_key=api_key)
+    response = await client.chat.completions.create(
+        model=settings.OPENROUTER_CHAT_MODEL,
+        messages=[{"role": "system", "content": system_prompt}, *messages],
+    )
+    content = response.choices[0].message.content
+    return _extract_message_text(content).strip()

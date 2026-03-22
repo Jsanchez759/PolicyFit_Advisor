@@ -10,8 +10,10 @@ from fastapi.requests import Request
 from api.router import router as api_router
 from api.core.config import settings
 from api.core.logging_config import setup_logging
+from api.core.storage import init_db
 
 setup_logging()
+init_db()
 logger = logging.getLogger("app")
 
 

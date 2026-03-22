@@ -10,6 +10,7 @@ function IntakeForm() {
   const policyId = useStore((state) => state.policyId)
   const setBusinessId = useStore((state) => state.setBusinessId)
   const setAnalysisId = useStore((state) => state.setAnalysisId)
+  const setAnalysisResults = useStore((state) => state.setAnalysisResults)
   const setIsLoading = useStore((state) => state.setIsLoading)
   const setError = useStore((state) => state.setError)
 
@@ -23,6 +24,12 @@ function IntakeForm() {
     locations: [],
   }
 
+  const [selectedProducts, setSelectedProducts] = useState([])
+  const [selectedOperations, setSelectedOperations] = useState([])
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('')
+  const [statusType, setStatusType] = useState('idle')
+
   const handleSubmit = async (values) => {
     if (!policyId) {
       setError('Please upload a policy first.')
@@ -31,7 +38,10 @@ function IntakeForm() {
     }
 
     try {
+      setIsProcessing(true)
       setIsLoading(true)
+      setStatusType('loading')
+      setStatusMessage('Saving business profile...')
 
       const payload = {
         ...values,
@@ -41,25 +51,30 @@ function IntakeForm() {
         operations: selectedOperations,
       }
 
-      // Create business
       const businessResponse = await businessService.create(payload)
       const businessId = businessResponse.data.id
       setBusinessId(businessId)
 
-      // Run analysis
+      setStatusMessage('Running coverage analysis and generating recommendations...')
       const analysisResponse = await recommendationService.analyze({
         business_id: businessId,
         policy_id: policyId,
       })
+
       setAnalysisId(analysisResponse.data.analysis_id)
-      useStore.getState().setAnalysisResults(analysisResponse.data)
+      setAnalysisResults(analysisResponse.data)
+      setStatusType('success')
+      setStatusMessage('Analysis completed successfully. Opening dashboard...')
       setError(null)
 
-      navigate('/dashboard')
+      setTimeout(() => navigate('/dashboard'), 900)
     } catch (err) {
+      setStatusType('error')
+      setStatusMessage('Analysis failed. Please review your information and try again.')
       setError('Failed to process your information. Please try again.')
       console.error('Form error:', err)
     } finally {
+      setIsProcessing(false)
       setIsLoading(false)
     }
   }
@@ -68,9 +83,6 @@ function IntakeForm() {
     initialValues,
     handleSubmit
   )
-
-  const [selectedProducts, setSelectedProducts] = useState([])
-  const [selectedOperations, setSelectedOperations] = useState([])
 
   const commonProducts = [
     'Manufacturing',
@@ -99,6 +111,13 @@ function IntakeForm() {
         </p>
 
         <form onSubmit={onSubmit} className="intake-form">
+          {statusType !== 'idle' && (
+            <div className={`status-message status-${statusType}`}>
+              {statusType === 'loading' && <span className="status-spinner" aria-hidden="true" />}
+              <span>{statusMessage}</span>
+            </div>
+          )}
+
           <div className="form-group">
             <label htmlFor="company_name">Company Name *</label>
             <input
@@ -109,6 +128,7 @@ function IntakeForm() {
               onChange={handleChange}
               onBlur={handleBlur}
               required
+              disabled={isProcessing}
             />
           </div>
 
@@ -125,6 +145,7 @@ function IntakeForm() {
                 placeholder="e.g., 339110"
                 pattern="\d{6}"
                 required
+                disabled={isProcessing}
               />
               <small>6-digit industry classification code</small>
             </div>
@@ -140,6 +161,7 @@ function IntakeForm() {
                 onBlur={handleBlur}
                 min="0"
                 required
+                disabled={isProcessing}
               />
             </div>
           </div>
@@ -154,6 +176,7 @@ function IntakeForm() {
               onChange={handleChange}
               onBlur={handleBlur}
               placeholder="e.g., 1000000"
+              disabled={isProcessing}
             />
           </div>
 
@@ -166,13 +189,12 @@ function IntakeForm() {
                     type="checkbox"
                     value={product}
                     checked={selectedProducts.includes(product)}
+                    disabled={isProcessing}
                     onChange={(e) => {
                       if (e.target.checked) {
                         setSelectedProducts([...selectedProducts, product])
                       } else {
-                        setSelectedProducts(
-                          selectedProducts.filter((p) => p !== product)
-                        )
+                        setSelectedProducts(selectedProducts.filter((p) => p !== product))
                       }
                     }}
                   />
@@ -191,13 +213,12 @@ function IntakeForm() {
                     type="checkbox"
                     value={operation}
                     checked={selectedOperations.includes(operation)}
+                    disabled={isProcessing}
                     onChange={(e) => {
                       if (e.target.checked) {
                         setSelectedOperations([...selectedOperations, operation])
                       } else {
-                        setSelectedOperations(
-                          selectedOperations.filter((o) => o !== operation)
-                        )
+                        setSelectedOperations(selectedOperations.filter((o) => o !== operation))
                       }
                     }}
                   />
@@ -207,8 +228,8 @@ function IntakeForm() {
             </div>
           </div>
 
-          <button type="submit" className="submit-button">
-            Analyze & Get Recommendations
+          <button type="submit" className="submit-button" disabled={isProcessing}>
+            {isProcessing ? 'Processing...' : 'Analyze & Get Recommendations'}
           </button>
         </form>
       </div>
