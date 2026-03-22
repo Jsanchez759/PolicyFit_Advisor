@@ -1,8 +1,5 @@
 """Document ingestion and processing"""
-import os
 from pathlib import Path
-from typing import Optional
-from datetime import datetime
 
 
 class DocumentProcessor:
@@ -22,31 +19,11 @@ class DocumentProcessor:
         Returns:
             Processing result metadata
         """
-        # TODO: Implement PDF extraction (PyPDF2, pdfplumber, etc.)
         return {
             "filename": Path(file_path).name,
             "format": "pdf",
-            "pages": 0,
-            "processing_status": "pending",
-            "extracted_text": "",
-        }
-    
-    async def process_docx(self, file_path: str) -> dict:
-        """
-        Process DOCX document
-        
-        Args:
-            file_path: Path to DOCX file
-            
-        Returns:
-            Processing result metadata
-        """
-        # TODO: Implement DOCX extraction (python-docx, etc.)
-        return {
-            "filename": Path(file_path).name,
-            "format": "docx",
-            "processing_status": "pending",
-            "extracted_text": "",
+            "pages": None,
+            "processing_status": "saved",
         }
     
     async def save_document(self, file_content: bytes, filename: str) -> str:

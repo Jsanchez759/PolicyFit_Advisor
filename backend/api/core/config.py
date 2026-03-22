@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     # File Upload Configuration
     MAX_UPLOAD_SIZE: int = 50 * 1024 * 1024  # 50MB
     UPLOAD_DIR: str = "./uploads"
-    ALLOWED_FILE_TYPES: List[str] = ["pdf", "docx", "doc"]
+    ALLOWED_FILE_TYPES: List[str] = ["pdf"]
     
     # LLM Configuration
     # OpenRouter-compatible OpenAI client settings.
@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str = ""
     OPENROUTER_CHAT_MODEL: str = "openrouter/free"
     OPENROUTER_EMBEDDING_MODEL: str = "nvidia/llama-nemotron-embed-vl-1b-v2:free"
+    OPENROUTER_PDF_MODEL: str = "openrouter/free"
+    OPENROUTER_PDF_ENGINE: str = "pdf-text"
     
     class Config:
         env_file = ".env"

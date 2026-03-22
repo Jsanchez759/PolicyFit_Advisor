@@ -24,11 +24,25 @@ function IntakeForm() {
   }
 
   const handleSubmit = async (values) => {
+    if (!policyId) {
+      setError('Please upload a policy first.')
+      navigate('/upload')
+      return
+    }
+
     try {
       setIsLoading(true)
 
+      const payload = {
+        ...values,
+        annual_revenue: values.annual_revenue === '' ? null : Number(values.annual_revenue),
+        employees: Number(values.employees || 0),
+        products: selectedProducts,
+        operations: selectedOperations,
+      }
+
       // Create business
-      const businessResponse = await businessService.create(values)
+      const businessResponse = await businessService.create(payload)
       const businessId = businessResponse.data.id
       setBusinessId(businessId)
 
@@ -38,6 +52,7 @@ function IntakeForm() {
         policy_id: policyId,
       })
       setAnalysisId(analysisResponse.data.analysis_id)
+      useStore.getState().setAnalysisResults(analysisResponse.data)
       setError(null)
 
       navigate('/dashboard')

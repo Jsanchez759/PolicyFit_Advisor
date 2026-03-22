@@ -47,7 +47,7 @@ function Upload() {
       <div className="upload-container">
         <h1>Upload Your Insurance Policy</h1>
         <p className="upload-subtitle">
-          Upload your commercial insurance policy document (PDF or DOCX)
+          Upload your commercial insurance policy document (PDF only)
         </p>
 
         <form onSubmit={handleUpload} className="upload-form">
@@ -56,13 +56,13 @@ function Upload() {
               type="file"
               id="file-input"
               onChange={handleFileChange}
-              accept=".pdf,.docx,.doc"
+              accept=".pdf"
               className="file-input"
             />
             <label htmlFor="file-input" className="file-label">
               <div className="upload-icon">📄</div>
               <p>Click to select or drag and drop</p>
-              <p className="file-types">Supported: PDF, DOCX, DOC</p>
+              <p className="file-types">Supported: PDF</p>
               <p className="max-size">Maximum file size: 50MB</p>
             </label>
           </div>

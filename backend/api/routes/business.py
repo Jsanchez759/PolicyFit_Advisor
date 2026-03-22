@@ -1,8 +1,12 @@
 """Business data endpoints"""
-from fastapi import APIRouter
+from uuid import uuid4
+
+from fastapi import APIRouter, HTTPException
+
 from api.schemas.business import BusinessData, BusinessDataResponse
 
 router = APIRouter()
+BUSINESS_STORE: dict[str, dict] = {}
 
 
 @router.post("/", response_model=BusinessDataResponse)
@@ -16,11 +20,16 @@ async def create_business(business: BusinessData):
     Returns:
         Created business data with ID
     """
-    # TODO: Implement business data creation
-    return {
-        "id": "temp_id",
-        **business.model_dump()
-    }
+    business_id = str(uuid4())
+    payload = {"id": business_id, **business.model_dump()}
+    BUSINESS_STORE[business_id] = payload
+    return payload
+
+
+@router.get("/", response_model=list[BusinessDataResponse])
+async def list_businesses():
+    """List all stored businesses."""
+    return list(BUSINESS_STORE.values())
 
 
 @router.get("/{business_id}", response_model=BusinessDataResponse)
@@ -34,13 +43,10 @@ async def get_business(business_id: str):
     Returns:
         Business data
     """
-    # TODO: Implement business data retrieval
-    return {
-        "id": business_id,
-        "company_name": "Sample Company",
-        "naics_code": "000000",
-        "employees": 0,
-    }
+    business = BUSINESS_STORE.get(business_id)
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    return business
 
 
 @router.put("/{business_id}", response_model=BusinessDataResponse)
@@ -55,11 +61,12 @@ async def update_business(business_id: str, business: BusinessData):
     Returns:
         Updated business data
     """
-    # TODO: Implement business data update
-    return {
-        "id": business_id,
-        **business.model_dump()
-    }
+    if business_id not in BUSINESS_STORE:
+        raise HTTPException(status_code=404, detail="Business not found")
+
+    updated = {"id": business_id, **business.model_dump()}
+    BUSINESS_STORE[business_id] = updated
+    return updated
 
 
 @router.delete("/{business_id}")
@@ -73,7 +80,10 @@ async def delete_business(business_id: str):
     Returns:
         Deletion confirmation
     """
-    # TODO: Implement business data deletion
+    if business_id not in BUSINESS_STORE:
+        raise HTTPException(status_code=404, detail="Business not found")
+
+    BUSINESS_STORE.pop(business_id, None)
     return {
         "business_id": business_id,
         "status": "deleted"

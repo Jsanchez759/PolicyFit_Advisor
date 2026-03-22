@@ -1,4 +1,8 @@
 """Policy document endpoints"""
+from pathlib import Path
+from uuid import uuid4
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from api.modules.ingestion.processor import DocumentProcessor
 from api.modules.extraction.extractor import PolicyExtractor
@@ -7,12 +11,13 @@ from api.core.config import settings
 router = APIRouter()
 processor = DocumentProcessor(settings.UPLOAD_DIR)
 extractor = PolicyExtractor()
+POLICY_STORE: dict[str, dict] = {}
 
 
 @router.post("/upload")
 async def upload_policy(file: UploadFile = File(...)):
     """
-    Upload a policy document (PDF or DOCX)
+    Upload a policy document (PDF)
     
     Args:
         file: Policy document file
@@ -38,14 +43,41 @@ async def upload_policy(file: UploadFile = File(...)):
     # Save file
     file_path = await processor.save_document(content, file.filename)
     
-    # TODO: Process document and extract information
+    ext = Path(file.filename).suffix.lower().strip(".")
+    if ext != "pdf":
+        raise HTTPException(status_code=400, detail="Unsupported file extension")
+
+    processed = await processor.process_pdf(file_path)
+
+    extracted_policy = await extractor.extract_policy_info(file_path)
+    policy_id = str(uuid4())
+    created_at = datetime.now(timezone.utc).isoformat()
+
+    payload = {
+        "policy_id": policy_id,
+        "filename": file.filename,
+        "file_path": file_path,
+        "status": "uploaded",
+        "processing": {
+            "format": processed.get("format"),
+            "pages": processed.get("pages"),
+        },
+        "extraction": extracted_policy,
+        "created_at": created_at,
+        "updated_at": created_at,
+    }
+    POLICY_STORE[policy_id] = payload
     
     return {
-        "policy_id": "temp_id",  # Would be generated
-        "filename": file.filename,
-        "status": "uploaded",
-        "message": "Policy document uploaded successfully"
+        **payload,
+        "message": "Policy document uploaded and extracted successfully",
     }
+
+
+@router.get("/")
+async def list_policies():
+    """List stored policies."""
+    return list(POLICY_STORE.values())
 
 
 @router.get("/{policy_id}")
@@ -59,11 +91,10 @@ async def get_policy(policy_id: str):
     Returns:
         Policy information
     """
-    # TODO: Implement policy retrieval
-    return {
-        "policy_id": policy_id,
-        "status": "pending"
-    }
+    policy = POLICY_STORE.get(policy_id)
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    return policy
 
 
 @router.delete("/{policy_id}")
@@ -77,7 +108,19 @@ async def delete_policy(policy_id: str):
     Returns:
         Deletion confirmation
     """
-    # TODO: Implement policy deletion
+    policy = POLICY_STORE.get(policy_id)
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+
+    # Best-effort local file cleanup.
+    file_path = policy.get("file_path")
+    if file_path:
+        try:
+            Path(file_path).unlink(missing_ok=True)
+        except Exception:
+            pass
+
+    POLICY_STORE.pop(policy_id, None)
     return {
         "policy_id": policy_id,
         "status": "deleted"

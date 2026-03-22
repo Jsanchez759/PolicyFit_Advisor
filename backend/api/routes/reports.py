@@ -1,7 +1,10 @@
 """Report generation endpoints"""
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+
 from api.modules.report_generation.generator import ReportGenerator
+from api.routes.recommendations import ANALYSIS_STORE
+from api.schemas.recommendation import AnalysisResult
 
 router = APIRouter()
 generator = ReportGenerator()
@@ -18,11 +21,17 @@ async def get_pdf_report(analysis_id: str):
     Returns:
         PDF file response
     """
-    # TODO: Retrieve analysis and generate PDF
-    return {
-        "message": "PDF report generation not yet implemented",
-        "analysis_id": analysis_id
-    }
+    analysis_data = ANALYSIS_STORE.get(analysis_id)
+    if not analysis_data:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    analysis = AnalysisResult(**analysis_data)
+    pdf_bytes = await generator.generate_pdf_report(analysis)
+    return StreamingResponse(
+        pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=policyfit-report-{analysis_id}.pdf"},
+    )
 
 
 @router.get("/{analysis_id}/html")
@@ -36,8 +45,12 @@ async def get_html_report(analysis_id: str):
     Returns:
         HTML content
     """
-    # TODO: Retrieve analysis and generate HTML
-    html_content = "<html><body><p>Report preview</p></body></html>"
+    analysis_data = ANALYSIS_STORE.get(analysis_id)
+    if not analysis_data:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    analysis = AnalysisResult(**analysis_data)
+    html_content = await generator.generate_html_report(analysis)
     return HTMLResponse(content=html_content)
 
 
@@ -52,12 +65,13 @@ async def get_json_report(analysis_id: str):
     Returns:
         JSON report
     """
-    # TODO: Retrieve analysis and return as JSON
-    return {
-        "analysis_id": analysis_id,
-        "format": "json",
-        "data": {}
-    }
+    analysis_data = ANALYSIS_STORE.get(analysis_id)
+    if not analysis_data:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    analysis = AnalysisResult(**analysis_data)
+    report_json = await generator.generate_json_report(analysis)
+    return JSONResponse(content=report_json)
 
 
 @router.post("/{analysis_id}/export")
@@ -78,9 +92,8 @@ async def export_report(analysis_id: str, format: str = "pdf"):
             detail="Invalid format. Supported: pdf, html, json"
         )
     
-    # TODO: Implement export logic
-    return {
-        "analysis_id": analysis_id,
-        "format": format,
-        "status": "exported"
-    }
+    if format == "pdf":
+        return await get_pdf_report(analysis_id)
+    if format == "html":
+        return await get_html_report(analysis_id)
+    return await get_json_report(analysis_id)

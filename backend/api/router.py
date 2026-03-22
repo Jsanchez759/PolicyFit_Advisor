@@ -16,3 +16,9 @@ router.include_router(reports.router, prefix="/reports", tags=["Reports"])
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
+
+@router.get("/")
+async def main():
+    """Main endpoint"""
+    return {"status": "healthy",
+            "message": "Welcome to the PolicyFit Advisor API. Please refer to the documentation for available endpoints."}

@@ -28,20 +28,23 @@ function Export() {
         case 'pdf':
           response = await reportService.getPdfReport(analysisId)
           // Trigger download
-          const url = window.URL.createObjectURL(new Blob([response.data]))
+          const url = window.URL.createObjectURL(response.data)
           const link = document.createElement('a')
           link.href = url
           link.setAttribute('download', `policy-analysis-${analysisId}.pdf`)
           document.body.appendChild(link)
           link.click()
           link.parentElement.removeChild(link)
+          window.URL.revokeObjectURL(url)
           break
 
         case 'html':
           response = await reportService.getHtmlReport(analysisId)
           // Open HTML in new window or download
           const htmlWindow = window.open()
-          htmlWindow.document.write(response.data)
+          if (htmlWindow) {
+            htmlWindow.document.write(response.data)
+          }
           break
 
         case 'json':

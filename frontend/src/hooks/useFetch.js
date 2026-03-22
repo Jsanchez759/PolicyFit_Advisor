@@ -10,7 +10,13 @@ export const useFetch = (fetchFunction, dependencies = []) => {
       try {
         setLoading(true)
         const result = await fetchFunction()
-        setData(result.data)
+        if (!result) {
+          setData(null)
+        } else if (Object.prototype.hasOwnProperty.call(result, 'data')) {
+          setData(result.data)
+        } else {
+          setData(result)
+        }
         setError(null)
       } catch (err) {
         setError(err)
