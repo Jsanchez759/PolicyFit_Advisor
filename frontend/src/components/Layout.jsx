@@ -14,18 +14,7 @@ const stages = [
 function Layout({ children }) {
   const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const savedKey = useStore((state) => state.openRouterApiKey)
-  const setOpenRouterApiKey = useStore((state) => state.setOpenRouterApiKey)
-  const [keyInput, setKeyInput] = useState(savedKey)
-  const [keySaved, setKeySaved] = useState(false)
   const currentStage = stages.findIndex((stage) => stage.path === pathname)
-
-  const saveKey = (event) => {
-    event.preventDefault()
-    setOpenRouterApiKey(keyInput.trim())
-    setKeySaved(true)
-  }
 
   return (
     <>
@@ -49,9 +38,6 @@ function Layout({ children }) {
             <NavLink to="/" end onClick={() => setMenuOpen(false)}>Overview</NavLink>
             <NavLink to="/upload" onClick={() => setMenuOpen(false)}>New analysis</NavLink>
             <NavLink to="/workspace" onClick={() => setMenuOpen(false)}>Workspace</NavLink>
-            <button type="button" className="settings-trigger" onClick={() => { setSettingsOpen(true); setMenuOpen(false); setKeySaved(false) }}>
-              Settings<span className={`key-indicator ${savedKey ? 'is-set' : ''}`} aria-hidden="true" />
-            </button>
           </nav>
         </div>
       </header>
@@ -75,26 +61,6 @@ function Layout({ children }) {
         <span>Clearer coverage decisions start with a closer look.</span>
       </footer>
 
-      {settingsOpen && (
-        <div className="settings-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setSettingsOpen(false) }}>
-          <section className="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title" onKeyDown={(event) => { if (event.key === 'Escape') setSettingsOpen(false) }}>
-            <div className="settings-heading">
-              <div>
-                <h2 id="settings-title">Analysis settings</h2>
-                <p>Add an OpenRouter key if the analysis service does not have one configured.</p>
-              </div>
-              <button type="button" className="settings-close" aria-label="Close settings" onClick={() => setSettingsOpen(false)}>×</button>
-            </div>
-            <form onSubmit={saveKey}>
-              <label htmlFor="openrouter-key">OpenRouter API key</label>
-              <input id="openrouter-key" type="password" autoComplete="off" autoFocus value={keyInput} onChange={(event) => { setKeyInput(event.target.value); setKeySaved(false) }} placeholder="sk-or-v1-..." />
-              <p className="settings-help">The key is kept in this browser session and sent to the app backend with analysis requests.</p>
-              <button type="submit" className="button button-primary">Save key</button>
-              {keySaved && <p className="settings-success" role="status">Key saved for this session.</p>}
-            </form>
-          </section>
-        </div>
-      )}
     </>
   )
 }

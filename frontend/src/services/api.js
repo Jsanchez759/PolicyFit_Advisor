@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { useStore } from '../context/store'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
 
@@ -9,14 +8,6 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-})
-
-api.interceptors.request.use((config) => {
-  const key = useStore.getState().openRouterApiKey
-  if (key) {
-    config.headers['X-OpenRouter-Api-Key'] = key
-  }
-  return config
 })
 
 // Policy endpoints

@@ -2,7 +2,7 @@
 from uuid import uuid4
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from api.core.llm_client import chat_json, chat_text
@@ -63,7 +63,7 @@ def _fallback_analysis(request: AnalysisRequest) -> dict:
 
 
 @router.post("/analyze", response_model=AnalysisResult)
-async def analyze_coverage(request: AnalysisRequest, http_request: Request):
+async def analyze_coverage(request: AnalysisRequest):
     """
     Analyze coverage gaps and generate recommendations
     
@@ -83,9 +83,7 @@ async def analyze_coverage(request: AnalysisRequest, http_request: Request):
 
     created_at = datetime.now(timezone.utc).isoformat()
 
-    request_api_key = http_request.headers.get("x-openrouter-api-key")
-
-    if not (request_api_key or settings.OPENROUTER_API_KEY):
+    if not settings.OPENROUTER_API_KEY:
         result = _fallback_analysis(request)
         result["created_at"] = created_at
         result["updated_at"] = created_at
@@ -113,7 +111,6 @@ async def analyze_coverage(request: AnalysisRequest, http_request: Request):
         parsed = await chat_json(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            api_key=request_api_key,
         )
     except Exception:
         parsed = {}
@@ -182,7 +179,6 @@ async def get_analysis_chat(analysis_id: str):
 async def send_analysis_chat_message(
     analysis_id: str,
     payload: AnalysisChatRequest,
-    http_request: Request,
 ):
     analysis = get_analysis_record(analysis_id)
     if not analysis:
@@ -192,8 +188,7 @@ async def send_analysis_chat_message(
     if not business:
         raise HTTPException(status_code=404, detail="Business not found")
 
-    request_api_key = http_request.headers.get("x-openrouter-api-key")
-    if not (request_api_key or settings.OPENROUTER_API_KEY):
+    if not settings.OPENROUTER_API_KEY:
         raise HTTPException(status_code=400, detail="OpenRouter API key is required")
 
     existing_messages = get_analysis_chat_messages(analysis_id)
@@ -217,7 +212,6 @@ async def send_analysis_chat_message(
     assistant_text = await chat_text(
         system_prompt=system_prompt,
         messages=llm_messages,
-        api_key=request_api_key,
     )
     assistant_msg = {
         "role": "assistant",

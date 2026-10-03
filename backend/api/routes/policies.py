@@ -3,7 +3,7 @@ from pathlib import Path
 from uuid import uuid4
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Request
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from api.core.storage import (
     create_policy_record,
     delete_policy_record,
@@ -20,7 +20,7 @@ extractor = PolicyExtractor()
 
 
 @router.post("/upload")
-async def upload_policy(request: Request, file: UploadFile = File(...)):
+async def upload_policy(file: UploadFile = File(...)):
     """
     Upload a policy document (PDF)
     
@@ -54,8 +54,7 @@ async def upload_policy(request: Request, file: UploadFile = File(...)):
 
     processed = await processor.process_pdf(file_path)
 
-    request_api_key = request.headers.get("x-openrouter-api-key")
-    extracted_policy = await extractor.extract_policy_info(file_path, api_key=request_api_key)
+    extracted_policy = await extractor.extract_policy_info(file_path)
     policy_id = str(uuid4())
     created_at = datetime.now(timezone.utc).isoformat()
 

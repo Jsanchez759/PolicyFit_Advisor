@@ -238,9 +238,12 @@ API_V1_PREFIX=/api/v1
 
 # LLM Configuration (OpenRouter)
 # Get API key from: https://openrouter.ai
+# Use a standard inference key, not an OpenRouter Management API key.
 OPENROUTER_API_KEY=your_openrouter_api_key
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_CHAT_MODEL=openrouter/auto
+OPENROUTER_CHAT_MODEL=openrouter/free
+OPENROUTER_PDF_MODEL=openrouter/free
+OPENROUTER_PDF_ENGINE=pdf-text
 OPENROUTER_EMBEDDING_MODEL=nvidia/llama-nemotron-embed-vl-1b-v2:free
 
 # CORS (comma-separated or JSON list)
@@ -263,7 +266,7 @@ VITE_API_URL=http://localhost:8000/api/v1
 VITE_APP_NAME=PolicyFit Advisor
 ```
 
-In the app, choose **New analysis** to upload a PDF (up to 50 MB), then complete the business form. If the backend has no `OPENROUTER_API_KEY` configured, open **Settings** and add a key for the current browser session. The key is sent with analysis requests and is cleared when the browser session ends.
+In the app, choose **New analysis** to upload a PDF (up to 50 MB), then complete the business form. Configure `OPENROUTER_API_KEY` on the backend; the frontend does not ask users for a provider key. The backend uses the server key for policy extraction, recommendations, and report chat. The default chat and PDF models use OpenRouter's free router.
 
 ## 📚 API Documentation
 
