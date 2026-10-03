@@ -1,10 +1,13 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+// Vercel does not read the developer's ignored .env file. Keep production
+// usable when VITE_API_URL has not been configured in the Vercel project.
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://policyfit-advisor.onrender.com/api/v1'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  // Render's free instance may take 50+ seconds to wake after inactivity.
+  timeout: 90000,
   headers: {
     'Content-Type': 'application/json',
   },
