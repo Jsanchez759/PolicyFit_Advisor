@@ -13,6 +13,7 @@ function Workspace() {
   const setError = useStore((state) => state.setError)
 
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [businesses, setBusinesses] = useState([])
   const [policies, setPolicies] = useState([])
@@ -53,6 +54,7 @@ function Workspace() {
     const loadAll = async () => {
       try {
         setLoading(true)
+        setLoadError(false)
         const [bRes, pRes, aRes] = await Promise.all([
           businessService.list(),
           policyService.list(),
@@ -62,7 +64,8 @@ function Workspace() {
         setPolicies(pRes.data || [])
         setAnalyses(aRes.data || [])
       } catch (err) {
-        setError('Failed to load workspace data')
+        setLoadError(true)
+        setError('Could not load workspace data')
       } finally {
         setLoading(false)
       }
@@ -148,6 +151,16 @@ function Workspace() {
     )
   }
 
+  if (loadError) {
+    return (
+      <div className="workspace-error">
+        <h1>Workspace is unavailable</h1>
+        <p>We could not reach the analysis service. Check that the backend is running, then try again.</p>
+        <button type="button" className="small-btn primary" onClick={() => setRefreshKey((key) => key + 1)}>Try again</button>
+      </div>
+    )
+  }
+
   return (
     <div className="workspace-page">
       <div className="workspace-header">
@@ -161,7 +174,7 @@ function Workspace() {
           <button onClick={() => navigate('/upload')} className="small-btn primary">New Analysis</button>
         </div>
         {analyses.length === 0 ? (
-          <p className="empty-text">No analyses yet.</p>
+          <p className="empty-text">No analyses yet. Upload a policy to start one.</p>
         ) : (
           <div className="card-list">
             {analyses.map((item) => (

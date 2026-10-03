@@ -7,6 +7,7 @@ import Recommendations from './pages/Recommendations'
 import Export from './pages/Export'
 import Workspace from './pages/Workspace'
 import Layout from './components/Layout'
+import './styles/theme.css'
 
 function App() {
   return (

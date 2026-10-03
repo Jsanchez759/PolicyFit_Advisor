@@ -250,7 +250,7 @@ ALLOWED_ORIGIN_REGEX=
 # File Upload
 MAX_UPLOAD_SIZE=52428800  # 50MB in bytes
 UPLOAD_DIR=./uploads
-ALLOWED_FILE_TYPES=["pdf","docx","doc"]
+ALLOWED_FILE_TYPES=["pdf"]
 
 # Database (SQLite by default, can use PostgreSQL)
 DATABASE_URL=sqlite:///./policyfit.db
@@ -262,6 +262,8 @@ DATABASE_URL=sqlite:///./policyfit.db
 VITE_API_URL=http://localhost:8000/api/v1
 VITE_APP_NAME=PolicyFit Advisor
 ```
+
+In the app, choose **New analysis** to upload a PDF (up to 50 MB), then complete the business form. If the backend has no `OPENROUTER_API_KEY` configured, open **Settings** and add a key for the current browser session. The key is sent with analysis requests and is cleared when the browser session ends.
 
 ## 📚 API Documentation
 
@@ -378,16 +380,12 @@ pytest --cov=app tests/
 pytest -v
 ```
 
-### Frontend Testing
+### Frontend Checks
 
 ```bash
 cd frontend
-
-# Run with Vitest (when configured)
-npm run test
-
-# Run with coverage
-npm run test:coverage
+npm run lint
+npm run build
 ```
 
 ## 📦 Technology Stack

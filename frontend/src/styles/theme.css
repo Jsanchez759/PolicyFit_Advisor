@@ -1,0 +1,97 @@
+/* Shared presentation for the analysis screens. */
+.intake-form-page, .dashboard-page, .recommendations-page, .export-page, .workspace-page { padding: 54px 0 88px; }
+.form-container, .export-container { width: min(100%, 850px); max-width: none; padding: 0; background: transparent; border-radius: 0; box-shadow: none; }
+.intake-form-page h1, .dashboard-header h1, .recommendations-header h1, .export-container h1, .workspace-header h1 {
+  margin: 0 0 12px; color: var(--deep); font-size: clamp(38px,4.3vw,56px); line-height: 1.07; font-weight: 600; text-align: left;
+}
+.form-subtitle, .dashboard-header p, .recommendations-header p, .export-subtitle {
+  max-width: 660px; margin: 0 0 34px; color: var(--muted); font-size: 17px; line-height: 1.55; text-align: left;
+}
+.intake-form { padding: 32px; border: 1px solid var(--line); border-radius: 15px; background: white; box-shadow: none; }
+.form-group label { color: var(--ink); font-weight: 700; }
+.form-group input, .form-group textarea, .form-group select {
+  border: 1px solid #bdd1ce; border-radius: 8px; background: #fff; color: var(--ink);
+}
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--teal); outline-color: #9bcbc1; }
+.form-group small { color: var(--muted); }
+.checkbox-group { gap: 9px; }
+.checkbox-label { border: 1px solid var(--line); border-radius: 7px; background: #f8fbfa; color: var(--ink); }
+.checkbox-label:has(input:checked) { border-color: var(--teal); background: var(--pale); }
+input[type='checkbox'], input[type='radio'] { accent-color: var(--teal); }
+.submit-button, .action-button.primary, .export-button.primary, .small-btn.primary {
+  background: var(--teal); color: white; border-color: var(--teal); border-radius: 8px;
+}
+.submit-button:hover:not(:disabled), .action-button.primary:hover, .export-button.primary:hover, .small-btn.primary:hover { background: var(--deep); border-color: var(--deep); }
+.action-button.secondary, .export-button.secondary, .action-button:not(.primary), .small-btn:not(.primary):not(.danger), .back-button {
+  background: #fff; color: var(--deep); border: 1px solid #a8c5c1; border-radius: 8px;
+}
+.action-button.secondary:hover, .export-button.secondary:hover, .action-button:not(.primary):hover, .small-btn:not(.primary):not(.danger):hover, .back-button:hover { background: var(--pale); }
+.dashboard-header, .recommendations-header { text-align: left; margin-bottom: 32px; }
+.dashboard-grid { grid-template-columns: minmax(245px,1.2fr) repeat(2,minmax(180px,1fr)); gap: 14px; margin-bottom: 20px; }
+.risk-card, .stats-card { padding: 26px; text-align: left; border: 1px solid var(--line); border-radius: 11px; box-shadow: none; }
+.risk-card { background: var(--deep); color: #fff; border-color: var(--deep); }
+.risk-card h3, .risk-card .risk-label { color: #c6ddda; }
+.risk-card .risk-score { color: #fff; }
+.stats-card { background: #fff; }
+.stats-card h3, .stats-card p { color: var(--muted); }
+.stats-card .stat-number { color: var(--teal); }
+.summary-section, .workspace-header, .workspace-section {
+  padding: 28px; border: 1px solid var(--line); border-radius: 11px; background: #fff; box-shadow: none;
+}
+.summary-section h2, .workspace-header h1, .workspace-section h2 { color: var(--deep); }
+.summary-content { color: var(--ink); line-height: 1.7; }
+.action-buttons, .recommendations-actions { justify-content: flex-start; }
+.recommendations-content { grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 18px; }
+.gaps-section, .recommendations-section { padding: 26px; border: 1px solid var(--line); border-radius: 11px; background: white; }
+.gaps-section h2, .recommendations-section h2 { color: var(--deep); }
+.gaps-list, .recommendations-list { gap: 10px; }
+.gap-card, .recommendation-card { padding: 17px; border: 1px solid var(--line); border-left: 4px solid var(--amber); border-radius: 7px; background: #fff; box-shadow: none; }
+.gap-card:hover, .recommendation-card:hover { box-shadow: none; }
+.gap-card.severity-critical, .gap-card.severity-high, .gap-card.severity-medium, .gap-card.severity-low,
+.recommendation-card.priority-high, .recommendation-card.priority-medium, .recommendation-card.priority-low { background: #fff; }
+.gap-card.severity-critical, .recommendation-card.priority-high { border-left-color: #bd6245; }
+.gap-card.severity-medium, .recommendation-card.priority-medium { border-left-color: var(--amber); }
+.gap-card.severity-low, .recommendation-card.priority-low { border-left-color: #62a58c; }
+.gap-header h3, .rec-header h3 { color: var(--ink); }
+.export-page { display: block; min-height: 0; }
+.export-container { margin: auto; }
+.format-selection { padding: 28px; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+.format-selection h2, .export-preview h3 { color: var(--deep); }
+.format-option { border: 1px solid var(--line); box-shadow: none; transition: border-color .2s, background-color .2s; }
+.format-option:hover, .format-option:has(input:checked) { background: var(--pale); border-color: var(--teal); }
+.format-option input[type='radio'] { accent-color: var(--teal); }
+.format-name, .format-option input[type='radio']:checked + .format-info .format-name { color: var(--deep); }
+.format-desc, .export-preview li { color: var(--muted); }
+.format-icon { color: var(--teal); }
+.export-preview { background: transparent; border-top: 1px solid var(--line); border-radius: 0; padding: 24px 0; }
+.workspace-page { gap: 14px; }
+.workspace-header { padding: 0 0 24px; background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
+.workspace-card { border: 1px solid var(--line); border-radius: 7px; background: #fbfdfc; }
+.workspace-card h3 { color: var(--deep); }
+.workspace-card p, .empty-text { color: var(--muted); }
+.chat-msg, .chat-msg.assistant { border-color: var(--line); background: #f6faf8; }
+.small-btn.danger { border-color: #deb6ae; color: #a44f3d; background: #fff8f6; }
+.dashboard-error, .recommendations-error, .export-error { max-width: 650px; margin: 80px auto; padding: 36px; border: 1px solid var(--line); border-radius: 12px; background: #fff; text-align: left; }
+.dashboard-error h2, .recommendations-error h2, .export-error h2 { color: var(--deep); }
+.intake-empty { max-width: 650px; margin: 70px auto 100px; padding: 34px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.intake-empty h1 { margin: 0 0 10px; color: var(--deep); font-size: 34px; }
+.intake-empty p { color: var(--muted); line-height: 1.55; }
+.workspace-error { max-width: 650px; margin: 70px auto 100px; padding: 34px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.workspace-error h1 { margin: 0 0 10px; color: var(--deep); font-size: 34px; }
+.workspace-error p { color: var(--muted); line-height: 1.55; }
+.format-icon { min-width: 49px; padding-top: 3px; color: var(--teal); font: 700 12px 'DM Sans', sans-serif; }
+.export-status { width: 100%; color: var(--teal); font-size: 14px; font-weight: 700; }
+@media (max-width: 850px) {
+  .dashboard-grid, .recommendations-content { grid-template-columns: 1fr; }
+  .intake-form-page, .dashboard-page, .recommendations-page, .export-page, .workspace-page { padding: 40px 0 65px; }
+}
+@media (max-width: 600px) {
+  .intake-form, .format-selection, .summary-section, .workspace-section, .gaps-section, .recommendations-section { padding: 18px; }
+  .form-row { grid-template-columns: 1fr; }
+  .action-buttons, .recommendations-actions, .export-actions { display: grid; }
+  .action-buttons button, .recommendations-actions button, .export-actions button { width: 100%; }
+  .workspace-card { display: block; }
+  .card-actions { margin-top: 14px; }
+  .format-option { padding: 14px; }
+  .export-preview ul { column-count: 1; }
+}

@@ -36,6 +36,11 @@ function IntakeForm() {
       navigate('/upload')
       return
     }
+    if (selectedProducts.length === 0 || selectedOperations.length === 0) {
+      setStatusType('error')
+      setStatusMessage('Choose at least one product or service and one operation.')
+      return
+    }
 
     try {
       setIsProcessing(true)
@@ -102,12 +107,22 @@ function IntakeForm() {
     'Remote',
   ]
 
+  if (!policyId) {
+    return (
+      <div className="intake-empty">
+        <h1>Add a policy first</h1>
+        <p>Your business details are compared with a policy document. Upload a PDF to continue.</p>
+        <button type="button" className="button button-primary" onClick={() => navigate('/upload')}>Upload a policy</button>
+      </div>
+    )
+  }
+
   return (
     <div className="intake-form-page">
       <div className="form-container">
-        <h1>Business Information</h1>
+        <h1>Tell us about your business.</h1>
         <p className="form-subtitle">
-          Provide your business details so we can generate tailored recommendations
+          These details help compare your operations with the coverage in your policy.
         </p>
 
         <form onSubmit={onSubmit} className="intake-form">

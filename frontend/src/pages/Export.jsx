@@ -12,6 +12,18 @@ function Export() {
 
   const [selectedFormat, setSelectedFormat] = useState('pdf')
   const [exporting, setExporting] = useState(false)
+  const [exportStatus, setExportStatus] = useState('')
+
+  const downloadBlob = (blob, filename) => {
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 1000)
+  }
 
   const handleExport = async () => {
     if (!analysisId) {
@@ -22,53 +34,38 @@ function Export() {
     try {
       setExporting(true)
       setIsLoading(true)
+      setExportStatus('')
 
       let response
       switch (selectedFormat) {
-        case 'pdf':
+        case 'pdf': {
           response = await reportService.getPdfReport(analysisId)
-          // Trigger download
-          const url = window.URL.createObjectURL(response.data)
-          const link = document.createElement('a')
-          link.href = url
-          link.setAttribute('download', `policy-analysis-${analysisId}.pdf`)
-          document.body.appendChild(link)
-          link.click()
-          link.parentElement.removeChild(link)
-          window.URL.revokeObjectURL(url)
+          downloadBlob(response.data, `policy-analysis-${analysisId}.pdf`)
           break
+        }
 
-        case 'html':
+        case 'html': {
           response = await reportService.getHtmlReport(analysisId)
-          // Open HTML in new window or download
-          const htmlWindow = window.open()
-          if (htmlWindow) {
-            htmlWindow.document.write(response.data)
-          }
+          downloadBlob(new Blob([response.data], { type: 'text/html' }), `policy-analysis-${analysisId}.html`)
           break
+        }
 
-        case 'json':
+        case 'json': {
           response = await reportService.getJsonReport(analysisId)
           const json = JSON.stringify(response.data, null, 2)
-          const element = document.createElement('a')
-          element.setAttribute(
-            'href',
-            'data:text/plain;charset=utf-8,' + encodeURIComponent(json)
-          )
-          element.setAttribute('download', `policy-analysis-${analysisId}.json`)
-          element.style.display = 'none'
-          document.body.appendChild(element)
-          element.click()
-          document.body.removeChild(element)
+          downloadBlob(new Blob([json], { type: 'application/json' }), `policy-analysis-${analysisId}.json`)
           break
+        }
 
         default:
           break
       }
 
       setError(null)
+      setExportStatus('Your report download is ready.')
     } catch (err) {
       setError(`Failed to export ${selectedFormat} report`)
+      setExportStatus('Could not download the report. Check the analysis service and try again.')
       console.error('Export error:', err)
     } finally {
       setExporting(false)
@@ -109,7 +106,7 @@ function Export() {
                 onChange={(e) => setSelectedFormat(e.target.value)}
               />
               <div className="format-info">
-                <div className="format-icon">📄</div>
+                <div className="format-icon">PDF</div>
                 <div>
                   <div className="format-name">PDF Report</div>
                   <div className="format-desc">
@@ -128,7 +125,7 @@ function Export() {
                 onChange={(e) => setSelectedFormat(e.target.value)}
               />
               <div className="format-info">
-                <div className="format-icon">🌐</div>
+                <div className="format-icon">HTML</div>
                 <div>
                   <div className="format-name">HTML Report</div>
                   <div className="format-desc">
@@ -147,7 +144,7 @@ function Export() {
                 onChange={(e) => setSelectedFormat(e.target.value)}
               />
               <div className="format-info">
-                <div className="format-icon">{ }</div>
+                <div className="format-icon">{'{}'}</div>
                 <div>
                   <div className="format-name">JSON Data</div>
                   <div className="format-desc">
@@ -160,7 +157,7 @@ function Export() {
         </div>
 
         <div className="export-preview">
-          <h3>What's included:</h3>
+          <h3>What&apos;s included:</h3>
           <ul>
             <li>Executive Summary</li>
             <li>Coverage Gaps Analysis</li>
@@ -172,6 +169,7 @@ function Export() {
         </div>
 
         <div className="export-actions">
+          {exportStatus && <p className="export-status" role="status">{exportStatus}</p>}
           <button
             onClick={handleExport}
             disabled={exporting}
